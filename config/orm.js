@@ -1,77 +1,56 @@
-
-// Here is the O.R.M. where you write functions that takes inputs and conditions
-// and turns them into database commands like SQL.
-
-var connection = require("./connection.js");
+const connection = require("./connection.js");
 
 function printQuestionMarks(num) {
-  var arr = [];
-
+  let arr = [];
   for (var i = 0; i < num; i++) {
     arr.push("?");
   }
-
   return arr.toString();
 }
 
 function objToSql(ob) {
-  // column1=value, column2=value2,...
-  var arr = [];
-
-  for (var key in ob) {
+  let arr = [];
+  for (let key in ob) {
     arr.push(key + "=" + ob[key]);
   }
 
   return arr.toString();
 }
 
-var orm = {
-  all: function(tableInput, cb) {
-    var queryString = "SELECT * FROM " + tableInput + ";";
-    connection.query(queryString, function(err, result) {
-      if (err) {
-        throw err;
-      }
-      cb(result);
+const orm = {
+  selectAll: function(table, callback){
+    var queryString = 'SELECT * FROM ' + table;
+
+    connection.query(queryString, function(err, data){
+      if(err) throw err;
+      callback(data);
     });
   },
-  // vals is an array of values that we want to save to cols
-  // cols are the columns we want to insert the values into
-  create: function(table, cols, vals, cb) {
-    var queryString = "INSERT INTO " + table;
 
-    queryString += " (";
-    queryString += cols.toString();
-    queryString += ") ";
-    queryString += "VALUES (";
-    queryString += printQuestionMarks(vals.length);
-    queryString += ") ";
+  insertOne: function(table, column, burgerInput, callback){
+    var queryString = 'INSERT INTO ' + table + '(' + column + ') VALUES (?)';
 
-    console.log(queryString);
-
-    connection.query(queryString, vals, function(err, result) {
-      if (err) {
-        throw err;
-      }
-      cb(result);
+    connection.query(queryString, [burgerInput], function(err, data){
+      if(err) throw err;
+      callback(data);
     });
   },
-  // objColVals would be the columns and values that you want to update
-  // an example of objColVals would be {name: panther, sleepy: true}
-  update: function(table, objColVals, condition, cb) {
-    var queryString = "UPDATE " + table;
 
-    queryString += " SET ";
-    queryString += objToSql(objColVals);
-    queryString += " WHERE ";
-    queryString += condition;
+  updateOne: function(table, col, colVal, condition, conditionVal, callback){
+    var queryString = 'UPDATE ' + table + ' SET ' + col + '=?' + 'WHERE ' + condition + '=?';
 
-    console.log(queryString);
-    connection.query(queryString, function(err, result) {
-      if (err) {
-        throw err;
-      }
-      cb(result);
+    connection.query(queryString, [colVal, conditionVal], function(err, data){
+      if(err) throw err;
+      callback(data);
+    });
+  },
+
+  deleteOne: function(table, condition, conditionVal, callback){
+    var queryString = 'DELETE FROM ' + table + ' WHERE ' + condition + '=?';
+
+    connection.query(queryString, [conditionVal], function(err, data){
+      if(err) throw err;
+      callback(data);
     });
   }
 };
